@@ -692,11 +692,14 @@ public class TestContentTypeDescriptionOnGennedFiles extends TestContentDescript
 		String charsetName = "windows-950";
 		doGenTest(charsetName);
 	}
-
-	public void testFile129() throws CoreException, IOException {
-		String charsetName = "X-UnicodeBig";
-		doGenTest(charsetName);
-	}
+/* 
+removed for PPC machine with IBM VM 
+https://bugs.eclipse.org/bugs/show_bug.cgi?id=126503
+*/ 
+//	public void testFile129() throws CoreException, IOException {
+//		String charsetName = "X-UnicodeBig";
+//		doGenTest(charsetName);
+//	}
 
 	public void testFile130() throws CoreException, IOException {
 		String charsetName = "X-UnicodeLittle";
