@@ -141,7 +141,7 @@ public class TestPageDirective extends TestCase {
 		language = pageDirectiveAdapter.getLanguage();
 
 		assertTrue("contentType should be html", "text/html".equals(contentType));
-		assertEquals("java", language);
+		assertTrue("language should be java", "java".equals(language));
 	}
 	
 	public void testSetEmbeddedType(){
