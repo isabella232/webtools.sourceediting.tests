@@ -11,6 +11,10 @@
 
 package org.eclipse.wst.xml.validation.tests.internal;
 import junit.framework.Test;
+
+import org.eclipse.wst.xml.core.internal.validation.errorcustomization.ErrorCustomizationManagerTest;
+import org.eclipse.wst.xml.core.internal.validation.errorcustomization.ErrorCustomizationRegistryTest;
+import org.eclipse.wst.xml.core.internal.validation.errorcustomization.ErrorMessageCustomizerDelegateTest;
 /**
  * The root test suite that contains all other XML validator test suites.
  * 
@@ -37,5 +41,8 @@ public class AllXMLTests extends junit.framework.TestSuite
     addTest(XMLExamplesTest.suite());
     addTest(BugFixesTest.suite());
     addTest(PathsTest.suite());
+    addTestSuite(ErrorCustomizationManagerTest.class);
+    addTestSuite(ErrorMessageCustomizerDelegateTest.class);
+    addTestSuite(ErrorCustomizationRegistryTest.class);
   }
 }
