@@ -287,6 +287,8 @@ public class TestIndex extends TestCase {
 	}
 
 	public void testAvailableFromExportedBuildpaths() throws Exception {
+		TaglibIndex.shutdown();
+
 		// Create project 1
 		IProject project = BundleResourceUtil.createSimpleProject("testavailable1", null, null);
 		assertTrue(project.exists());
@@ -298,11 +300,18 @@ public class TestIndex extends TestCase {
 		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/testavailable2", "/testavailable2");
 		BundleResourceUtil.copyBundleEntryIntoWorkspace("/testfiles/bug_118251-sample/sample_tld.jar", "/testavailable2/WebContent/WEB-INF/lib/sample_tld.jar");
 
+		TaglibIndex.startup();
+
 		// make sure project 1 sees no taglibs
 		ITaglibRecord[] records = TaglibIndex.getAvailableTaglibRecords(new Path("/testavailable1/WebContent"));
 		assertEquals("ITaglibRecords were found", 0, records.length);
 		// make sure project 2 sees two taglibs
 		ITaglibRecord[] records2 = TaglibIndex.getAvailableTaglibRecords(new Path("/testavailable2/WebContent"));
+		if(records2.length != 2) {
+			for (int i = 0; i < records2.length; i++) {
+				System.err.println(records2[i]);
+			}
+		}
 		assertEquals("total ITaglibRecord count doesn't match", 2, records2.length);
 
 		TaglibIndex.shutdown();

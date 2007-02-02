@@ -82,12 +82,10 @@ public class BundleResourceUtil {
 				}
 			}
 			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				e.printStackTrace(System.err);
 			}
 			catch (CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				e.printStackTrace(System.err);
 			}
 		}
 		return file;
