@@ -261,7 +261,11 @@ public class TestIndex extends TestCase {
 		 */
 		IFile main = project.getFile("main.jsp");
 		IMarker[] markers = main.findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ZERO);
-		assertTrue("problem markers found", markers.length == 0);
+		StringBuffer s = new StringBuffer();
+		for (int i = 0; i < markers.length; i++) {
+			s.append("\n" + markers[i].getAttribute(IMarker.LINE_NUMBER) + ":" + markers[i].getAttribute(IMarker.MESSAGE));
+		}
+		assertEquals("problem markers found" + s.toString(), 0, markers.length);
 	}
 
 	/**
