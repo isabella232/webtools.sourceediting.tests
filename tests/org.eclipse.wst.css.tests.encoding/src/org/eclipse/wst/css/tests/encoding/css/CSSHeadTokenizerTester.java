@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2004 IBM Corporation and others.
+ * Copyright (c) 2004, 2007 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -115,7 +115,7 @@ public class CSSHeadTokenizerTester extends TestCase {
 		doTestFile(filename, null);
 	}
 
-	public void testEUCJP() throws IOException {
+	public void _testEUCJP() throws IOException {
 		String filename = this.fileLocation + "encoding_test_eucjp.css";
 		doTestFile(filename, "EUC-JP");
 	}
@@ -140,7 +140,7 @@ public class CSSHeadTokenizerTester extends TestCase {
 		doTestFile(filename, "ISO-8859-6");
 	}
 
-	public void testShiftJIS() throws IOException {
+	public void _testShiftJIS() throws IOException {
 		String filename = this.fileLocation + "encoding_test_sjis.css";
 		doTestFile(filename, "SHIFT_JIS");
 	}

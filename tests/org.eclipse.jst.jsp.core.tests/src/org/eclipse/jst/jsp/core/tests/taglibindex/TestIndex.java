@@ -17,18 +17,36 @@ import java.net.URL;
 import junit.framework.TestCase;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jst.jsp.core.internal.JSPCorePlugin;
+import org.eclipse.jst.jsp.core.internal.contentmodel.tld.provisional.TLDDocument;
+import org.eclipse.jst.jsp.core.internal.contentmodel.tld.provisional.TLDElementDeclaration;
+import org.eclipse.jst.jsp.core.internal.preferences.JSPCorePreferenceNames;
 import org.eclipse.jst.jsp.core.taglib.IJarRecord;
 import org.eclipse.jst.jsp.core.taglib.ITaglibRecord;
 import org.eclipse.jst.jsp.core.taglib.IURLRecord;
 import org.eclipse.jst.jsp.core.taglib.TaglibIndex;
+import org.eclipse.jst.jsp.core.tests.JSPCoreTestsPlugin;
+import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.validation.internal.operations.ValidatorManager;
+import org.eclipse.wst.xml.core.internal.contentmodel.CMElementDeclaration;
+import org.eclipse.wst.xml.core.internal.contentmodel.CMNode;
+import org.eclipse.wst.xml.core.internal.modelquery.ModelQueryUtil;
+import org.eclipse.wst.xml.core.internal.provisional.contentmodel.CMNodeWrapper;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * Tests for the TaglibIndex.
@@ -224,17 +242,51 @@ public class TestIndex extends TestCase {
 		assertEquals(uri, ((IJarRecord) taglibRecord2).getURI());
 	}
 
+	public void test_181057a() throws Exception {
+		boolean doValidateSegments = JSPCorePlugin.getDefault().getPluginPreferences().getBoolean(JSPCorePreferenceNames.VALIDATE_FRAGMENTS);
+		String testName = "bug_181057";
+		// Create new project
+		IProject j = BundleResourceUtil.createSimpleProject("j", null, null);
+		assertTrue(j.exists());
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/j" + testName, "/j");
+		IProject k = BundleResourceUtil.createSimpleProject("k", null, null);
+		assertTrue(k.exists());
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/k" + testName, "/k");
+
+		IProject project = BundleResourceUtil.createSimpleProject(testName, Platform.getStateLocation(JSPCoreTestsPlugin.getDefault().getBundle()).append(testName), null);
+		assertTrue(project.exists());
+		JSPCorePlugin.getDefault().getPluginPreferences().setValue(JSPCorePreferenceNames.VALIDATE_FRAGMENTS, true);
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/" + testName, "/" + testName);
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/struts.jar", "/" + testName + "/struts.jar");
+		project.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor());
+		project.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor());
+		project.build(IncrementalProjectBuilder.FULL_BUILD, "org.eclipse.wst.validation.validationbuilder", null, new NullProgressMonitor());
+		Platform.getJobManager().join(ValidatorManager.VALIDATOR_JOB_FAMILY, new NullProgressMonitor());
+		Platform.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, new NullProgressMonitor());
+		Platform.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, new NullProgressMonitor());
+		JSPCorePlugin.getDefault().getPluginPreferences().setValue(JSPCorePreferenceNames.VALIDATE_FRAGMENTS, doValidateSegments);
+		/*
+		 * main.jsp contains numerous references to tags in struts.jar, which
+		 * is at the end of the build path
+		 */
+		IFile main = project.getFile("main.jsp");
+		IMarker[] markers = main.findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ZERO);
+		StringBuffer s = new StringBuffer();
+		for (int i = 0; i < markers.length; i++) {
+			s.append("\n" + markers[i].getAttribute(IMarker.LINE_NUMBER) + ":" + markers[i].getAttribute(IMarker.MESSAGE));
+		}
+		assertEquals("problem markers found" + s.toString(), 0, markers.length);
+	}
+
 	/**
 	 * test caching from session-to-session
 	 */
 	public void testCaching1() throws Exception {
-		TaglibIndex.shutdown();
 		// Create new project
 		IProject project = BundleResourceUtil.createSimpleProject("testcache1", null, null);
 		assertTrue(project.exists());
 		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/testcache1", "/testcache1");
 		BundleResourceUtil.copyBundleEntryIntoWorkspace("/testfiles/bug_118251-sample/sample_tld.jar", "/testcache1/WebContent/WEB-INF/lib/sample_tld.jar");
-		TaglibIndex.startup();
 
 		ITaglibRecord[] records = TaglibIndex.getAvailableTaglibRecords(new Path("/testcache1/WebContent"));
 		assertEquals("total ITaglibRecord count doesn't match", 5, records.length);
@@ -309,7 +361,7 @@ public class TestIndex extends TestCase {
 		assertEquals("ITaglibRecords were found", 0, records.length);
 		// make sure project 2 sees two taglibs
 		ITaglibRecord[] records2 = TaglibIndex.getAvailableTaglibRecords(new Path("/testavailable2/WebContent"));
-		if(records2.length != 2) {
+		if (records2.length != 2) {
 			for (int i = 0; i < records2.length; i++) {
 				System.err.println(records2[i]);
 			}
@@ -320,8 +372,8 @@ public class TestIndex extends TestCase {
 		TaglibIndex.startup();
 
 
-		records2 = TaglibIndex.getAvailableTaglibRecords(new Path("/testavailable2/WebContent"));
-		assertEquals("total ITaglibRecord count doesn't match after restart", 2, records2.length);
+		records = TaglibIndex.getAvailableTaglibRecords(new Path("/testavailable2/WebContent"));
+		assertEquals("total ITaglibRecord count doesn't match after restart", 2, records.length);
 
 		IJavaProject created = JavaCore.create(project2);
 		assertTrue("/availabletest2 not a Java project", created.exists());
@@ -372,5 +424,38 @@ public class TestIndex extends TestCase {
 		// and one taglib should still be visible from project 1
 		records = TaglibIndex.getAvailableTaglibRecords(new Path("/testavailable1/WebContent"));
 		assertEquals("total ITaglibRecord count doesn't match (after exporting jar and restarting)", 1, records.length);
+	}
+	
+	public void testUtilityProjectSupport() throws Exception {
+		// Create project 1
+		IProject project = BundleResourceUtil.createSimpleProject("test-jar", null, null);
+		assertTrue(project.exists());
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/bug183756/test-jar", "/test-jar");
+
+		// Create project 2
+		IProject project2 = BundleResourceUtil.createSimpleProject("test-war", null, null);
+		assertTrue(project2.exists());
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/bug183756/test-war", "/test-war");
+
+		IFile testFile = project2.getFile(new Path("src/main/webapp/test.jsp"));
+		assertTrue("missing test JSP file!", testFile.isAccessible());
+
+		IDOMModel jspModel = null;
+		try {
+			jspModel = (IDOMModel) StructuredModelManager.getModelManager().getModelForRead(testFile);
+			NodeList tests = jspModel.getDocument().getElementsByTagName("test:test");
+			assertTrue("test:test element not found", tests.getLength() > 0);
+			CMElementDeclaration elementDecl = ModelQueryUtil.getModelQuery(jspModel).getCMElementDeclaration(((Element) tests.item(0)));
+			assertNotNull("No element declaration was found for test:test at runtime", elementDecl);
+			assertTrue("element declaration was not the expected kind", elementDecl instanceof CMNodeWrapper);
+			CMNode originNode = ((CMNodeWrapper) elementDecl).getOriginNode();
+			assertTrue("element declaration was not from a tag library", originNode instanceof TLDElementDeclaration);
+			assertEquals("element declaration was not from expected tag library", "http://foo.com/testtags", ((TLDDocument) ((TLDElementDeclaration) originNode).getOwnerDocument()).getUri());
+		}
+		finally {
+			if (jspModel != null) {
+				jspModel.releaseFromRead();
+			}
+		}
 	}
 }

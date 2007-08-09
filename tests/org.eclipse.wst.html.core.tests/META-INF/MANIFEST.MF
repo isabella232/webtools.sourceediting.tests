@@ -2,12 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name.0
 Bundle-SymbolicName: org.eclipse.wst.html.core.tests
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.1.qualifier
 Bundle-ClassPath: htmlcoretests.jar
 Bundle-Activator: org.eclipse.wst.html.core.tests.HTMLCoreTestsPlugin
 Bundle-Vendor: %Bundle-Vendor.0
 Bundle-Localization: plugin
 Export-Package: org.eclipse.wst.html.core.tests,
+ org.eclipse.wst.html.core.tests.format,
+ org.eclipse.wst.html.core.tests.format.testfiles.html,
  org.eclipse.wst.html.core.tests.misc,
  org.eclipse.wst.html.core.tests.model,
  org.eclipse.wst.html.core.tests.parser,

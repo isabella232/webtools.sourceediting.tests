@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import junit.framework.TestCase;
 
@@ -21,22 +22,38 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jst.jsp.core.internal.domdocument.DOMModelForJSP;
 import org.eclipse.jst.jsp.core.internal.java.IJSPTranslation;
 import org.eclipse.jst.jsp.core.internal.java.JSPTranslation;
 import org.eclipse.jst.jsp.core.internal.java.JSPTranslationAdapter;
 import org.eclipse.jst.jsp.core.internal.java.JSPTranslationAdapterFactory;
+import org.eclipse.jst.jsp.core.internal.provisional.JSP11Namespace;
 import org.eclipse.jst.jsp.ui.tests.other.ScannerUnitTests;
 import org.eclipse.jst.jsp.ui.tests.util.FileUtil;
 import org.eclipse.jst.jsp.ui.tests.util.ProjectUnzipUtility;
+import org.eclipse.jst.jsp.ui.tests.util.ProjectUtil;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.utils.StringUtils;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 
 /**
@@ -74,6 +91,77 @@ public class JSPTranslationTest extends TestCase {
 		File zipFile = FileUtil.makeFileFor(ProjectUnzipUtility.PROJECT_ZIPS_FOLDER, "includes_tests.zip", ProjectUnzipUtility.PROJECT_ZIPS_FOLDER);
 		fProjUtil.unzipAndImport(zipFile, platformLocation.getURL().getPath());
 		fProjUtil.initJavaProject("INCLUDES_TESTS");
+	}
+
+	public void testPageDirectiveSessionVariableInFile() throws JavaModelException {
+		String jspTestFilePathString = "INCLUDES_TESTS/test189924.jsp";
+		ProjectUtil.copyBundleEntryIntoWorkspace("/testfiles/189924/test189924.jsp", jspTestFilePathString);
+		IPath jspTestFilePath = new Path(jspTestFilePathString);
+		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(jspTestFilePath);
+
+		verifyTranslationHasNoSessionFieldsOrVariables(file);
+	}
+	private void verifyTranslationHasNoSessionFieldsOrVariables(IFile file) throws JavaModelException {
+		IDOMModel model = null;
+		try {
+			model = (IDOMModel) getStructuredModelForRead(file);
+			setupAdapterFactory(model);
+
+			JSPTranslationAdapter adapter = (JSPTranslationAdapter) model.getDocument().getAdapterFor(IJSPTranslation.class);
+			ICompilationUnit cu = adapter.getJSPTranslation().getCompilationUnit();
+			cu.makeConsistent(new NullProgressMonitor());
+			IType[] types = cu.getAllTypes();
+			for (int i = 0; i < types.length; i++) {
+				IJavaElement[] members = types[i].getChildren();
+				for (int k = 0; k < members.length; k++) {
+					// check fields for name "session"
+					if (members[k].getElementType() == IJavaElement.FIELD) {
+						assertFalse("field named \"session\" exists", members[k].getElementName().equals(JSP11Namespace.ATTR_NAME_SESSION));
+					}
+					/*
+					 * check "public void
+					 * _jspService(javax.servlet.http.HttpServletRequest
+					 * request, javax.servlet.http.HttpServletResponse
+					 * response)" for local variables named "session"
+					 */
+					else if (members[k].getElementType() == IJavaElement.METHOD && members[k].getElementName().startsWith("_jspService")) {
+						ICompilationUnit compilationUnit = ((IMethod) members[k]).getCompilationUnit();
+						compilationUnit.makeConsistent(new NullProgressMonitor());
+						ASTParser parser = ASTParser.newParser(AST.JLS3);
+						parser.setSource(cu);
+						ASTNode node = parser.createAST(null);
+						node.accept(new ASTVisitor() {
+							public boolean visit(VariableDeclarationStatement node) {
+								Iterator fragments = node.fragments().iterator();
+								while (fragments.hasNext()) {
+									VariableDeclarationFragment fragment = (VariableDeclarationFragment) fragments.next();
+									if (fragment.getName().getFullyQualifiedName().equals(JSP11Namespace.ATTR_NAME_SESSION)) {
+										String typeName = ((SimpleType) node.getType()).getName().getFullyQualifiedName();
+										assertFalse("local variable of type \"javax.servlet.http.HttpSession\" and named \"session\" exists", typeName.equals("javax.servlet.http.HttpSession"));
+									}
+								}
+								return super.visit(node);
+							}
+						});
+					}
+				}
+			}
+		}
+		finally {
+			if (model != null)
+				model.releaseFromRead();
+		}
+	}
+	
+	public void testPageDirectiveSessionVariableInSegment() throws JavaModelException {
+		String jspTestFilePathString = "INCLUDES_TESTS/test189924.jsp";
+		ProjectUtil.copyBundleEntryIntoWorkspace("/testfiles/189924/test189924.jsp", jspTestFilePathString);
+		jspTestFilePathString = "INCLUDES_TESTS/includer.jsp";
+		ProjectUtil.copyBundleEntryIntoWorkspace("/testfiles/189924/includer.jsp", jspTestFilePathString);
+		IPath jspTestFilePath = new Path(jspTestFilePathString);
+		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(jspTestFilePath);
+
+		verifyTranslationHasNoSessionFieldsOrVariables(file);	
 	}
 
 	public void testTranslatePositions() {
@@ -128,6 +216,11 @@ public class JSPTranslationTest extends TestCase {
 			String text = translation.getJavaText();
 			
 			assertNotNull("JSP translation text:", text);
+			// adjust for line delimiters
+			knownTranslationText = StringUtils.replace(knownTranslationText, "\r\n", "\n");
+			knownTranslationText = StringUtils.replace(knownTranslationText, "\r", "\n");
+			text = StringUtils.replace(text, "\r\n", "\n");
+			text = StringUtils.replace(text, "\r", "\n");
 			assertEquals("JSP translation text does not match expected", knownTranslationText, text);
 		}
 		finally {
@@ -196,6 +289,11 @@ public class JSPTranslationTest extends TestCase {
 			InputStream in = getClass().getResourceAsStream("translated_xml_jsp.bin");
 			String knownTranslationText = loadChars(in);
 			
+			// adjust for line delimiters
+			knownTranslationText = StringUtils.replace(knownTranslationText, "\r\n", "\n");
+			knownTranslationText = StringUtils.replace(knownTranslationText, "\r", "\n");
+			javaText = StringUtils.replace(javaText, "\r\n", "\n");
+			javaText = StringUtils.replace(javaText, "\r", "\n");
 			assertEquals(knownTranslationText, javaText);
 		}
 		finally {
@@ -243,7 +341,12 @@ public class JSPTranslationTest extends TestCase {
 			InputStream in = getClass().getResourceAsStream("translated_xml_jsp_cdata.bin");
 			String knownText = loadChars(in);
 			
-			assertEquals(knownText, transText);
+			// adjust for line delimiters
+			knownText = StringUtils.replace(knownText, "\r\n", "\n");
+			knownText = StringUtils.replace(knownText, "\r", "\n");
+			transText = StringUtils.replace(transText, "\r\n", "\n");
+			transText = StringUtils.replace(transText, "\r", "\n");
+			assertEquals(transText, knownText);
 		}
 		finally {
 			if(sModel != null)
