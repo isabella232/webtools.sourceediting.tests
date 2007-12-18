@@ -1,0 +1,6 @@
+bin
+
+build.xml
+temp.folder
+xmluitests.jar
+javaCompiler.xmluitests.jar.args
