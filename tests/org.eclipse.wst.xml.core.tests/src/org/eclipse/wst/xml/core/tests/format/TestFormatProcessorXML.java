@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 Eclipse Foundation
+ * Copyright (c) 2006, 2008 Eclipse Foundation
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -250,5 +250,10 @@ public class TestFormatProcessorXML extends TestCase {
 		((StructuredFormatPreferencesXML) formatPreferences).setAlignEndBracket(true);
 		formatAndAssertEquals("testfiles/xml/multiattributes.xml", "testfiles/xml/multiattributes-yessplit-yesalign-fmt.xml", false);
 
+	}
+	
+	public void testProcessingInstruction()  throws UnsupportedEncodingException, IOException, CoreException {
+		// BUG198297
+		formatAndAssertEquals("testfiles/xml/processinginstruction.xml", "testfiles/xml/processinginstruction-fmt.xml");
 	}
 }
