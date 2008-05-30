@@ -2,4 +2,3 @@ bin
 temp.folder
 build.xml
 validatexmltests.jar
-javaCompiler.validatexmltests.jar.args
