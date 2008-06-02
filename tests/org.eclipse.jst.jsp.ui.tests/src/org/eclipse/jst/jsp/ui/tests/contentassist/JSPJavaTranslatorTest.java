@@ -12,14 +12,21 @@ package org.eclipse.jst.jsp.ui.tests.contentassist;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 
 import junit.framework.TestCase;
 
+import org.eclipse.jst.jsp.core.internal.java.IJSPTranslation;
+import org.eclipse.jst.jsp.core.internal.java.JSPTranslationAdapterFactory;
+import org.eclipse.jst.jsp.core.internal.java.JSPTranslationUtil;
 import org.eclipse.jst.jsp.core.internal.java.JSPTranslator;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.INodeAdapterFactory;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.utils.StringUtils;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMNode;
 
 /**
@@ -64,6 +71,38 @@ public class JSPJavaTranslatorTest extends TestCase {
 		}
 	}
 
+	public void testMultipleJSPSectionsInJavascript() throws Exception {
+		String filename = "testfiles/jspInJavascript2.jsp";
+		IStructuredModel sm = getStructuredModelForRead(filename);
+		assertNotNull("couldn't load JSP for test", sm);
+		JSPTranslationUtil translationUtil = new JSPTranslationUtil(sm.getStructuredDocument());
+
+		String javaText = StringUtils.replace(translationUtil.getTranslation().getJavaText(), "\r\n", "\n");
+		javaText = StringUtils.replace(javaText, "\r", "\n");
+		sm.releaseFromRead();
+
+		String translatedText = loadContents("testfiles/jspInJavascript2.javasource");
+		assertEquals("translated contents are not as expected", translatedText, javaText);
+	}
+
+	/**
+	 * @return
+	 */
+	private String loadContents(String filename) throws IOException {
+		Reader reader = new InputStreamReader(getClass().getResourceAsStream(filename));
+		char[] readBuffer = new char[2048];
+		int n = reader.read(readBuffer);
+		StringBuffer s = new StringBuffer();
+		while (n > 0) {
+			s.append(readBuffer, 0, n);
+			n = reader.read(readBuffer);
+		}
+
+		String source = StringUtils.replace(s.toString(), "\r\n", "\n");
+		source = StringUtils.replace(source, "\r", "\n");
+		return source;
+	}
+
 	/**
 	 * IMPORTANT whoever calls this must releaseFromRead after they are done
 	 * using it.
@@ -78,6 +117,13 @@ public class JSPJavaTranslatorTest extends TestCase {
 		IModelManager modelManager = StructuredModelManager.getModelManager();
 		InputStream inStream = getClass().getResourceAsStream(filename);
 		IStructuredModel sModel = modelManager.getModelForRead(filename, inStream, null);
+		
+		INodeAdapterFactory factory = sModel.getFactoryRegistry().getFactoryFor(IJSPTranslation.class);
+		if (factory == null) {
+			factory = new JSPTranslationAdapterFactory();
+			sModel.getFactoryRegistry().addFactory(factory);
+		}
+		
 		return sModel;
 	}
 }

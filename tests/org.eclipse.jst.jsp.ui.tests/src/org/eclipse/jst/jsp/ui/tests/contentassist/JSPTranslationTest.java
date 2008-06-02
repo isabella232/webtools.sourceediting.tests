@@ -185,7 +185,7 @@ public class JSPTranslationTest extends TestCase {
 			
 			int jspTestPosition = translation.getJspText().indexOf("<%= ") + 4;
 			int javaOffset = translation.getJavaOffset(jspTestPosition) - classnameLength;
-			assertEquals("JSPTranslation java offset:", 972, javaOffset);
+			assertEquals("JSPTranslation java offset:", 1009, javaOffset);
 			
 			// (<%= | %>)
 			int javaTestPostition = translation.getJavaText().indexOf("out.print(\"\"+\n   \n);") + 14;

@@ -2,12 +2,8 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.jsp.*;
 
-public class __2F_INCLUDES_TESTS_2F_jsp_include_test_2E_jsp extends javax.servlet.http.HttpServlet{
- String argh = "argh"; 
-
- public String globalIncludedString = "included";
-
- protected String with_space = "withspace";
+public class _testfiles_2F_jspInJavascript2_2E_jsp extends javax.servlet.http.HttpServlet{
+String testJspString = "testJspString"; 
 
 public void _jspService(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response)
 		throws java.io.IOException, javax.servlet.ServletException {
@@ -19,19 +15,22 @@ Object page = null;
 javax.servlet.http.HttpSession session = null;
 
 try {
- String localIncludedString = globalIncludedString;
-for(int i=0; i<5; i++) {
 out.print(""+
-i
+ testJspString 
 );
-}
-javax.swing.JButton BEAN_includedBean = new javax.swing.JButton();
- int include_include_int = 5; 
-javax.swing.JButton includesUseBean = new javax.swing.JButton();
-{ // <gifts:gift>
-} // </gifts:gift>
+  
+
+        if( request.getAttribute("SoapURL") != null )
+        {
+        
 out.print(""+
-   
+ (String)request.getAttribute("SoapURL")
 );
+
+        }
+        else
+        { 
+        
+ } 
  } catch (java.lang.Exception e) {} 
 }}
