@@ -167,6 +167,11 @@ public class TestPartitionFormatterXML extends TestCase {
 		prefs.setClearAllBlankLines(true);
 		formatAndAssertEquals("testfiles/xml/simple-standalone.xml", "testfiles/xml/simple-standalone-newfmt.xml", prefs);
 	}
+	
+	public void testWhitespaceFormatXSD() throws UnsupportedEncodingException, IOException, CoreException {
+		// Bug 194698
+		formatAndAssertEquals("testfiles/xml/xml-whitespace-xsd.xml", "testfiles/xml/xml-whitespace-xsd-actual.xml");
+	}
 
 	public void testPreserveFormat() throws UnsupportedEncodingException, IOException, CoreException {
 		// results are different than old formatter
