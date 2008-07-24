@@ -29,6 +29,7 @@ import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.sse.core.internal.util.URIResolver;
+import org.eclipse.wst.sse.core.utils.StringUtils;
 import org.eclipse.wst.xml.core.internal.formatter.DefaultXMLPartitionFormatter;
 import org.eclipse.wst.xml.core.internal.formatter.XMLFormattingPreferences;
 import org.eclipse.wst.xml.core.tests.util.StringCompareUtil;
@@ -150,6 +151,13 @@ public class TestPartitionFormatterXML extends TestCase {
 
 			String expectedContents = new String(afterBytes.toByteArray(), UTF_8);
 			String actualContents = new String(formattedBytes.toByteArray(), UTF_8);
+
+			/* Make some adjustments to ignore cross platform line delimiter issues */
+			expectedContents = StringUtils.replace(expectedContents, "\r\n", "\n");
+			expectedContents = StringUtils.replace(expectedContents, "\r", "\n");
+			actualContents = StringUtils.replace(actualContents, "\r\n", "\n");
+			actualContents = StringUtils.replace(actualContents, "\r", "\n");
+			
 			assertTrue("Formatted document differs from the expected.\nExpected Contents:\n" + expectedContents + "\nActual Contents:\n" + actualContents, fStringCompareUtil.equalsIgnoreLineSeperator(expectedContents, actualContents));
 		}
 		finally {
