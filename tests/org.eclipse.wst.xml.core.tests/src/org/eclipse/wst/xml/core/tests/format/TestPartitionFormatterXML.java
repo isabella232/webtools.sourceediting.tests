@@ -127,6 +127,12 @@ public class TestPartitionFormatterXML extends TestCase {
 			assertNotNull("could not retrieve structured model for : " + afterPath, afterModel);
 
 			IStructuredDocument document = beforeModel.getStructuredDocument();
+			
+			String normalizedContents = document.get();
+			normalizedContents = StringUtils.replace(normalizedContents, "\r\n", "\n");
+			normalizedContents = StringUtils.replace(normalizedContents, "\r", "\n");
+			document.set(normalizedContents);
+			
 			if (prefs == null)
 				prefs = new XMLFormattingPreferences();
 			TextEdit edit = partitionFormatter.format(beforeModel, 0, document.getLength(), prefs);
