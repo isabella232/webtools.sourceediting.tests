@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2005 IBM Corporation and others.
+ * Copyright (c) 2004, 2008 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -182,7 +182,10 @@ public class JSPHeadTokenizerTester extends TestCase {
 			token = tokenizer.getNextToken();
 			String tokenType = token.getType();
 
-			if (tokenType == XMLHeadTokenizerConstants.XMLDelEncoding) {
+			if(canHandleAsUnicodeStream(tokenType)) {
+				
+			}
+			else if (tokenType == XMLHeadTokenizerConstants.XMLDelEncoding) {
 				if (tokenizer.hasMoreTokens()) {
 					HeadParserToken valueToken = tokenizer.getNextToken();
 					String valueTokenType = valueToken.getType();
@@ -225,6 +228,19 @@ public class JSPHeadTokenizerTester extends TestCase {
 		}
 		finalToken = token;
 		return finalToken;
+	}
+	
+	private boolean canHandleAsUnicodeStream(String tokenType) {
+		boolean canHandleAsUnicode = false;
+		if (tokenType == EncodingParserConstants.UTF83ByteBOM) {
+			canHandleAsUnicode = true;
+			this.fCharset = "UTF-8"; //$NON-NLS-1$
+		}
+		else if (tokenType == EncodingParserConstants.UTF16BE || tokenType == EncodingParserConstants.UTF16LE) {
+			canHandleAsUnicode = true;
+			this.fCharset = "UTF-16"; //$NON-NLS-1$
+		}
+		return canHandleAsUnicode;
 	}
 
 	public void testBestCase() throws Exception {
@@ -291,6 +307,26 @@ public class JSPHeadTokenizerTester extends TestCase {
 	public void testNormalCharset() throws Exception {
 		String filename = fileLocation + "nomalDirectiveCaseUsingCharset.jsp";
 		doTestFile(filename, "ISO-8859-3", null, "text/html");
+	}
+	
+	public void testUTF16le() throws Exception {
+		String filename = fileLocation + "utf16le.jsp";
+		doTestFile(filename, "UTF-16LE", null, "text/html");
+	}
+	
+	public void testUTF16be() throws Exception {
+		String filename = fileLocation + "utf16be.jsp";
+		doTestFile(filename, "UTF-16BE", null, "text/html");
+	}
+	
+	public void testUTF16BOM() throws Exception {
+		String filename = fileLocation + "utf16BOM.jsp";
+		doTestFile(filename, "UTF-16", null, null);
+	}
+	
+	public void testUTF16leXmlStyle() throws Exception {
+		String filename = fileLocation + "utf16le_xmlStyle.jsp";
+		doTestFile(filename, "UTF-16LE", null, null);
 	}
 
 	public String getLanguage() {
