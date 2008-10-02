@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://cyclicGroupReferences"
+	elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://cyclicGroupReferences">
+
+	<group name="NewGroupDefinition0">
+		<sequence>
+			<element name="gr0e1" type="string"></element>
+			<group ref="tns:NewGroupDefinition1"></group>
+		</sequence>
+	</group>
+
+	<group name="NewGroupDefinition1">
+		<sequence>
+			<element name="gr1e1" type="string"></element>
+			<element name="gr1e2" type="string"></element>
+			<group ref="tns:NewGroupDefinition2"></group>
+			<element name="gr1e3" type="string"></element>
+		</sequence>
+	</group>
+
+	<complexType name="GlobalComplexType">
+		<sequence>
+			<element name="cte1" type="string"></element>
+			<group ref="tns:NewGroupDefinition1"></group>
+			<element name="cte2" type="string"></element>
+			<element name="cte3" type="string"></element>
+		</sequence>
+	</complexType>
+
+	<group name="NewGroupDefinition2">
+		<sequence>
+			<element name="gr2e1" type="string"></element>
+			<element name="gr2e2" type="string"></element>
+			<group ref="tns:NewGroupDefinition0"></group>
+		</sequence>
+	</group>
+
+	<group name="ValidGroup001">
+		<sequence>
+			<element name="ve1" type="string"></element>
+			<element name="ve2" type="string"></element>
+			<group ref="tns:ValidGroup002"></group>
+		</sequence>
+	</group>
+
+	<group name="ValidGroup002">
+		<sequence>
+			<element name="v2e2" type="string"></element>
+			<element name="v2e1" type="string"></element>
+			<group ref="tns:ValidGroup003"></group>
+		</sequence>
+	</group>
+
+	<group name="ValidGroup003">
+		<sequence>
+			<element name="v3e1" type="string"></element>
+			<element name="v3e2" type="string"></element>
+		</sequence>
+	</group>
+
+	<element name="RootElement" type="tns:GlobalComplexType">
+	</element>
+</schema>

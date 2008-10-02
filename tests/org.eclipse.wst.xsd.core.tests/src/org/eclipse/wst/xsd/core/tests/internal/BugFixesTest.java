@@ -21,18 +21,22 @@ import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMAttributeDeclaration;
+import org.eclipse.wst.xml.core.internal.contentmodel.CMContent;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMDataType;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMDocument;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMElementDeclaration;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMNamedNodeMap;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMNode;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMNodeList;
+import org.eclipse.wst.xml.core.internal.contentmodel.internal.util.CMValidator;
+import org.eclipse.wst.xml.core.internal.contentmodel.util.CMDescriptionBuilder;
 import org.eclipse.wst.xsd.contentmodel.internal.CMDocumentFactoryXSD;
 import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl;
 import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl.DocumentationImpl;
 import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl.XSDElementDeclarationAdapter;
 import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl.XSDModelGroupAdapter;
 import org.eclipse.xsd.XSDComplexTypeDefinition;
+import org.eclipse.xsd.XSDElementDeclaration;
 import org.eclipse.xsd.XSDSchema;
 import org.eclipse.xsd.XSDTypeDefinition;
 import org.osgi.framework.Bundle;
@@ -417,5 +421,73 @@ public class BugFixesTest extends BaseTestCase
 		assertNull("globalAttr4 returned data when non expected.", ((DocumentationImpl)documentation.item(0)).getValue());
 	}
 	
-		
+
+  public void testCMVisitorForCyclicGroupReferences()
+  {
+    // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=245851
+    Bundle bundle = Platform.getBundle("org.eclipse.wst.xsd.core.tests");
+    URL url = bundle.getEntry("/testresources/samples/groups/CyclicModelGroupDefinitionReferences.xsd");
+    
+    CMDocument document = XSDImpl.buildCMDocument(url.toExternalForm());
+    assertNotNull("Content model loaded Null", document);
+    
+    CMNamedNodeMap elements = document.getElements();
+    
+    CMElementDeclaration rootElement =  (CMElementDeclaration)elements.getNamedItem("RootElement");
+    assertNotNull("Missing object element", rootElement);
+    
+    try
+    {
+      // Tests GraphGenerator's visitCMNode
+      CMValidator cmValidator = new CMValidator();  // internal
+      cmValidator.createGraph(rootElement);
+      
+      // Tests CMDescriptionBuilder's visitCMNode
+      CMDescriptionBuilder descriptionBuilder = new CMDescriptionBuilder(); // internal
+      descriptionBuilder.buildDescription(rootElement);
+    }
+    catch (StackOverflowError e)
+    {
+      fail(e.getLocalizedMessage()); 
+    }
+  }
+  
+  public void testXSDVisitorForCyclicGroupReferences()
+  {
+    // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=245851
+    Bundle bundle = Platform.getBundle("org.eclipse.wst.xsd.core.tests");
+    URL url = bundle.getEntry("/testresources/samples/groups/CyclicModelGroupDefinitionReferences.xsd");
+
+    XSDSchema xsdSchema = XSDImpl.buildXSDModel(url.toExternalForm());
+    assertNotNull(xsdSchema);
+
+    String typeName = "RootElement";
+    try
+    {
+      for (Iterator<XSDElementDeclaration> elements = xsdSchema.getElementDeclarations().iterator(); elements.hasNext();)
+      {
+        XSDElementDeclaration element = elements.next();
+        if (typeName.equals(element.getName()))
+        {
+          CMNode cmNode = XSDImpl.getAdapter(element);
+          if (cmNode instanceof XSDElementDeclarationAdapter)
+          {
+            XSDElementDeclarationAdapter adapter = (XSDElementDeclarationAdapter) cmNode;
+            CMContent content = adapter.getContent();
+            assertNotNull("Content is null", content);
+            
+            CMNamedNodeMap localElements = adapter.getLocalElements();
+            assertNotNull("localElements is null", localElements);
+            return;
+          }
+        }
+      }
+    }
+    catch (StackOverflowError e)
+    {
+      fail(e.getLocalizedMessage());
+    }
+    fail("Unexpected failure");
+  }
+
 }
