@@ -464,21 +464,25 @@ public class BugFixesTest extends BaseTestCase
     String typeName = "RootElement";
     try
     {
-      for (Iterator<XSDElementDeclaration> elements = xsdSchema.getElementDeclarations().iterator(); elements.hasNext();)
+      for (Iterator elements = xsdSchema.getElementDeclarations().iterator(); elements.hasNext();)
       {
-        XSDElementDeclaration element = elements.next();
-        if (typeName.equals(element.getName()))
+        Object obj = elements.next();
+        if (obj instanceof XSDElementDeclaration)
         {
-          CMNode cmNode = XSDImpl.getAdapter(element);
-          if (cmNode instanceof XSDElementDeclarationAdapter)
+          XSDElementDeclaration element = (XSDElementDeclaration) obj;
+          if (typeName.equals(element.getName()))
           {
-            XSDElementDeclarationAdapter adapter = (XSDElementDeclarationAdapter) cmNode;
-            CMContent content = adapter.getContent();
-            assertNotNull("Content is null", content);
+            CMNode cmNode = XSDImpl.getAdapter(element);
+            if (cmNode instanceof XSDElementDeclarationAdapter)
+            {
+              XSDElementDeclarationAdapter adapter = (XSDElementDeclarationAdapter) cmNode;
+              CMContent content = adapter.getContent();
+              assertNotNull("Content is null", content);
             
-            CMNamedNodeMap localElements = adapter.getLocalElements();
-            assertNotNull("localElements is null", localElements);
-            return;
+              CMNamedNodeMap localElements = adapter.getLocalElements();
+              assertNotNull("localElements is null", localElements);
+              return;
+            }
           }
         }
       }
