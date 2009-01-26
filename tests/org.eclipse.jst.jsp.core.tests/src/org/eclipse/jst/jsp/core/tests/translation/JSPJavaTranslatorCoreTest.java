@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -342,6 +342,28 @@ public class JSPJavaTranslatorCoreTest extends TestCase {
 				assertTrue("Syntax error reported after 456" + markerText, ((Integer) markers[i].getAttribute(IMarker.CHAR_START)).intValue() < 456);
 			}
 		}
+
+		// clean up if we got to the end
+		project.delete(true, true, null);
+	}
+	
+	public void test_150794() throws Exception {
+		String testName = "bug_150794";
+		// Create new project
+		IProject project = BundleResourceUtil.createSimpleProject(testName, null, null);
+		assertTrue(project.exists());
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/" + testName, "/" + testName);
+		
+		IFile main = project.getFile("/WebContent/escapedQuotes.jsp");
+		assertTrue("sample test file does not exist", main.isAccessible());
+		
+		JSPJavaValidator validator = new JSPJavaValidator();
+		IReporter reporter = new ReporterForTest();
+		ValidationContextForTest helper = new ValidationContextForTest();
+		helper.setURI(main.getFullPath().toOSString());
+		validator.validate(helper, reporter);
+
+		assertTrue("Problem markers found", reporter.getMessages().size() == 0);
 
 		// clean up if we got to the end
 		project.delete(true, true, null);
