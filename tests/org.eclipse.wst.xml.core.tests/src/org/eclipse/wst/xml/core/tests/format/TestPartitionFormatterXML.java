@@ -318,4 +318,11 @@ public class TestPartitionFormatterXML extends TestCase {
 		prefs.setClearAllBlankLines(true);
 		formatAndAssertEquals("testfiles/xml/xml-keep-blank-lines.xml", "testfiles/xml/xml-clear-blank-lines-fmt.xml", prefs);
 	}
+
+	public void testFormatWithFracturedXMLContent() throws UnsupportedEncodingException, IOException, CoreException {
+		// Bug 229135
+		// Test that text content that is split into multiple document regions does not stop the formatter
+		formatAndAssertEquals("testfiles/xml/xml-229135.xml", "testfiles/xml/xml-229135-fmt.xml");
+	}
+
 }
