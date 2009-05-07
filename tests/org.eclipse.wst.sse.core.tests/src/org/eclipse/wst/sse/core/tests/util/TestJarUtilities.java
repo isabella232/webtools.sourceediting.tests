@@ -266,5 +266,11 @@ public class TestJarUtilities extends TestCase {
 		assertTrue("not enough contents read", contents.length() > 40);
 		assertTrue("contents not as expected" + contents.substring(0, 40), contents.startsWith("##########################################################"));
 	}
+	
+	public void testSanity() {
+		IFile testJar = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(TEST_JAR_UTILITIES_TESTFILE_JAR));
+		assertTrue("test jar resource is not in workspace", testJar.exists());
+		assertTrue("test jar resource not accessible from workspace", testJar.isAccessible());
+	}
 
 }
