@@ -52,8 +52,10 @@ public class TestDelegatingSourceValidatorForXML extends TestCase
 
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projName);
 		try {
-			project.create(description, new NullProgressMonitor());
-			project.open(new NullProgressMonitor());
+			if(!project.exists())
+				project.create(description, new NullProgressMonitor());
+			if(!project.isAccessible())
+				project.open(new NullProgressMonitor());
 		}
 		catch (CoreException e) {
 			e.printStackTrace();

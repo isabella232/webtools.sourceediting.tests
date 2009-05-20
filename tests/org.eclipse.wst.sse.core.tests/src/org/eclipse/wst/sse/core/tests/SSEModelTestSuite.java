@@ -20,6 +20,7 @@ import org.eclipse.wst.sse.core.tests.events.TestNoChangeEvent;
 import org.eclipse.wst.sse.core.tests.events.TestRegionChangedEvent;
 import org.eclipse.wst.sse.core.tests.events.TestRegionsReplacedEvent;
 import org.eclipse.wst.sse.core.tests.events.TestStructuredDocumentRegionsReplacedEvent;
+import org.eclipse.wst.sse.core.tests.util.TestJarUtilities;
 
 
 public class SSEModelTestSuite extends TestSuite {
@@ -44,7 +45,7 @@ public class SSEModelTestSuite extends TestSuite {
 	// TestDocumentReader.class, TestCharSequenceReader.class,
 	// TestRegionMatches.class};
 
-	private static Class[] classes = new Class[]{ExistenceTest.class, TestNewDocumentContentEvent.class, TestAboutToBeChangedEvent.class, TestNewDocumentEvent.class, TestNoChangeEvent.class, TestRegionChangedEvent.class,TestRegionsReplacedEvent.class,TestStructuredDocumentRegionsReplacedEvent.class};
+	private static Class[] classes = new Class[]{ExistenceTest.class, TestNewDocumentContentEvent.class, TestAboutToBeChangedEvent.class, TestNewDocumentEvent.class, TestNoChangeEvent.class, TestRegionChangedEvent.class,TestRegionsReplacedEvent.class,TestStructuredDocumentRegionsReplacedEvent.class, TestJarUtilities.class};
 
 	public SSEModelTestSuite() {
 		super("SSE Model Basic Test Suite");

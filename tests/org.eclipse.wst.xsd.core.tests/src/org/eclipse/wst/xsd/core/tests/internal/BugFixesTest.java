@@ -16,22 +16,27 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMAttributeDeclaration;
+import org.eclipse.wst.xml.core.internal.contentmodel.CMContent;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMDataType;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMDocument;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMElementDeclaration;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMNamedNodeMap;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMNode;
 import org.eclipse.wst.xml.core.internal.contentmodel.CMNodeList;
+import org.eclipse.wst.xml.core.internal.contentmodel.internal.util.CMValidator;
+import org.eclipse.wst.xml.core.internal.contentmodel.util.CMDescriptionBuilder;
 import org.eclipse.wst.xsd.contentmodel.internal.CMDocumentFactoryXSD;
 import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl;
 import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl.DocumentationImpl;
+import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl.XSDElementDeclarationAdapter;
+import org.eclipse.wst.xsd.contentmodel.internal.XSDImpl.XSDModelGroupAdapter;
 import org.eclipse.xsd.XSDComplexTypeDefinition;
+import org.eclipse.xsd.XSDElementDeclaration;
 import org.eclipse.xsd.XSDSchema;
 import org.eclipse.xsd.XSDTypeDefinition;
 import org.osgi.framework.Bundle;
@@ -167,6 +172,38 @@ public class BugFixesTest extends BaseTestCase
       }
     }
     assertTrue(foundDesiredElement);  // if we didn't even find the noinput element, then something terrible went wrong
+  }
+  
+  public void testXSDTypeWhitespaceFacets() {
+	  // Bug [194698] - Test that the correct whitespace facets are applied to the types
+	  String XSD_FILE_NAME = "XSDWhitespace.xsd";
+	  String fileURI = FILE_PROTOCOL + PLUGIN_ABSOLUTE_PATH + SAMPLES_DIR + XSD_FILE_NAME;
+	  CMDocumentFactoryXSD factory = new CMDocumentFactoryXSD();
+	  assertNotNull("Assert factory is not null", factory);
+	  CMDocument cmDocument = factory.createCMDocument(fileURI);
+	  assertNotNull("Assert CMDocument is not null", cmDocument);
+	  CMElementDeclaration elemDecl = (CMElementDeclaration)cmDocument.getElements().item(0);
+	  assertEquals("test", elemDecl.getNodeName());
+	  assertTrue(elemDecl.getContent() instanceof XSDModelGroupAdapter);
+	  XSDModelGroupAdapter group = (XSDModelGroupAdapter) elemDecl.getContent();
+	  CMNodeList list = group.getChildNodes();
+	  XSDElementDeclarationAdapter adapter = null;
+	  
+	  String nodeName = null, expected = null;
+	  CMDataType type = null;
+	  // Iterate over the child nodes of the element, examining the whitespace facets */
+	  for(int i = 0; i < list.getLength(); i++) {
+		  adapter = (XSDElementDeclarationAdapter) list.item(i);
+
+		  nodeName = adapter.getNodeName();
+		  assertNotNull(nodeName);
+		  assertTrue(nodeName.contains("-"));
+		  type = adapter.getDataType();
+		  assertNotNull(type);
+		  
+		  expected = nodeName.substring(nodeName.indexOf('-') + 1);
+		  assertEquals(expected, type.getProperty(XSDImpl.PROPERTY_WHITESPACE_FACET));
+	  }
   }
   
   public void testXSITypeVsTypeAttr() 
@@ -384,5 +421,77 @@ public class BugFixesTest extends BaseTestCase
 		assertNull("globalAttr4 returned data when non expected.", ((DocumentationImpl)documentation.item(0)).getValue());
 	}
 	
-		
+
+  public void testCMVisitorForCyclicGroupReferences()
+  {
+    // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=245851
+    Bundle bundle = Platform.getBundle("org.eclipse.wst.xsd.core.tests");
+    URL url = bundle.getEntry("/testresources/samples/groups/CyclicModelGroupDefinitionReferences.xsd");
+    
+    CMDocument document = XSDImpl.buildCMDocument(url.toExternalForm());
+    assertNotNull("Content model loaded Null", document);
+    
+    CMNamedNodeMap elements = document.getElements();
+    
+    CMElementDeclaration rootElement =  (CMElementDeclaration)elements.getNamedItem("RootElement");
+    assertNotNull("Missing object element", rootElement);
+    
+    try
+    {
+      // Tests GraphGenerator's visitCMNode
+      CMValidator cmValidator = new CMValidator();  // internal
+      cmValidator.createGraph(rootElement);
+      
+      // Tests CMDescriptionBuilder's visitCMNode
+      CMDescriptionBuilder descriptionBuilder = new CMDescriptionBuilder(); // internal
+      descriptionBuilder.buildDescription(rootElement);
+    }
+    catch (StackOverflowError e)
+    {
+      fail(e.getLocalizedMessage()); 
+    }
+  }
+  
+  public void testXSDVisitorForCyclicGroupReferences()
+  {
+    // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=245851
+    Bundle bundle = Platform.getBundle("org.eclipse.wst.xsd.core.tests");
+    URL url = bundle.getEntry("/testresources/samples/groups/CyclicModelGroupDefinitionReferences.xsd");
+
+    XSDSchema xsdSchema = XSDImpl.buildXSDModel(url.toExternalForm());
+    assertNotNull(xsdSchema);
+
+    String typeName = "RootElement";
+    try
+    {
+      for (Iterator elements = xsdSchema.getElementDeclarations().iterator(); elements.hasNext();)
+      {
+        Object obj = elements.next();
+        if (obj instanceof XSDElementDeclaration)
+        {
+          XSDElementDeclaration element = (XSDElementDeclaration) obj;
+          if (typeName.equals(element.getName()))
+          {
+            CMNode cmNode = XSDImpl.getAdapter(element);
+            if (cmNode instanceof XSDElementDeclarationAdapter)
+            {
+              XSDElementDeclarationAdapter adapter = (XSDElementDeclarationAdapter) cmNode;
+              CMContent content = adapter.getContent();
+              assertNotNull("Content is null", content);
+            
+              CMNamedNodeMap localElements = adapter.getLocalElements();
+              assertNotNull("localElements is null", localElements);
+              return;
+            }
+          }
+        }
+      }
+    }
+    catch (StackOverflowError e)
+    {
+      fail(e.getLocalizedMessage());
+    }
+    fail("Unexpected failure");
+  }
+
 }

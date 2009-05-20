@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -333,18 +333,37 @@ public class JSPJavaTranslatorCoreTest extends TestCase {
 			// line/start-end
 			markerText.append("\nL" + markers[i].getAttribute(IMarker.LINE_NUMBER) + "/o" + markers[i].getAttribute(IMarker.CHAR_START) + "-"  + markers[i].getAttribute(IMarker.CHAR_END) + ":" + markers[i].getAttribute(IMarker.MESSAGE));
 		}
-		int numberOfSyntaxErrors = 0;
 		for (int i = 0; i < markers.length; i++) {
 			Object message = markers[i].getAttribute(IMarker.MESSAGE);
 			assertNotNull("Marker message was null!", message);
 			if (message.toString().startsWith("Syntax error")) {
-				numberOfSyntaxErrors++;
 				assertTrue("Syntax error reported before line 25" + markerText, ((Integer) markers[i].getAttribute(IMarker.LINE_NUMBER)).intValue() >= 25);
 				assertTrue("Syntax error reported before offset 371" + markerText, ((Integer) markers[i].getAttribute(IMarker.CHAR_START)).intValue() >= 370);
 				assertTrue("Syntax error reported after 456" + markerText, ((Integer) markers[i].getAttribute(IMarker.CHAR_START)).intValue() < 456);
 			}
 		}
-		assertEquals("wrong number of syntax errors reported\n" + markerText, 3, numberOfSyntaxErrors);
+
+		// clean up if we got to the end
+		project.delete(true, true, null);
+	}
+	
+	public void test_150794() throws Exception {
+		String testName = "bug_150794";
+		// Create new project
+		IProject project = BundleResourceUtil.createSimpleProject(testName, null, null);
+		assertTrue(project.exists());
+		BundleResourceUtil.copyBundleEntriesIntoWorkspace("/testfiles/" + testName, "/" + testName);
+		
+		IFile main = project.getFile("/WebContent/escapedQuotes.jsp");
+		assertTrue("sample test file does not exist", main.isAccessible());
+		
+		JSPJavaValidator validator = new JSPJavaValidator();
+		IReporter reporter = new ReporterForTest();
+		ValidationContextForTest helper = new ValidationContextForTest();
+		helper.setURI(main.getFullPath().toOSString());
+		validator.validate(helper, reporter);
+
+		assertTrue("Problem markers found", reporter.getMessages().size() == 0);
 
 		// clean up if we got to the end
 		project.delete(true, true, null);
