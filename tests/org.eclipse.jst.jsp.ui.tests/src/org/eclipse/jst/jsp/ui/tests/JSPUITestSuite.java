@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.jst.jsp.ui.tests.pagedirective.TestPageDirective;
 import org.eclipse.jst.jsp.ui.tests.partitioning.TestStructuredPartitionerJSP;
 import org.eclipse.jst.jsp.ui.tests.registry.AdapterFactoryRegistryTest;
 import org.eclipse.jst.jsp.ui.tests.validation.JSPHTMLValidatorTest;
+import org.eclipse.jst.jsp.ui.tests.validation.TestJSPMarkupValidator;
 import org.eclipse.jst.jsp.ui.tests.viewer.TestViewerConfigurationJSP;
 
 
@@ -62,6 +63,7 @@ public class JSPUITestSuite extends TestSuite {
 
 		addTest(new TestSuite(TestContentDescription.class, "Content Description Tests"));
 		addTest(new TestSuite(JSPHTMLValidatorTest.class, "JSPHTMLValidatorTest"));
+		addTest(new TestSuite(TestJSPMarkupValidator.class, "TestJSPMarkupValidator"));
 		// pa_TODO fix this test
 		//addTest(new TestSuite(JSPSearchTests.class));
 	}
