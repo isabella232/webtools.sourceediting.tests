@@ -2,7 +2,7 @@
 <feature
       id="org.eclipse.wst.xml_tests.feature"
       label="%featureName"
-      version="3.2.0.qualifier"
+      version="3.0.1.qualifier"
       provider-name="%providerName">
 
    <description>
@@ -20,6 +20,12 @@
    <url>
       <update label="%updateSiteName" url="http://download.eclipse.org/webtools/updates/"/>
    </url>
+
+
+   <requires>
+      <import feature="org.eclipse.wst.xml_ui.feature" version="3.0.1"/>
+      <import feature="org.eclipse.test" version="3.3.0"/>
+   </requires>
 
    <plugin
          id="org.eclipse.wst.dtd.core.tests"
@@ -101,12 +107,6 @@
 
    <plugin
          id="org.eclipse.wst.xsd.core.tests"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.eclipse.wst.xsd.ui.tests"
          download-size="0"
          install-size="0"
          version="0.0.0"/>
