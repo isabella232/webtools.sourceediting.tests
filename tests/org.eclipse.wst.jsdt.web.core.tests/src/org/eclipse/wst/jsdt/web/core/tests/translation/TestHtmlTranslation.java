@@ -41,7 +41,7 @@ public class TestHtmlTranslation extends TestCase {
 		
 		JsTranslationAdapterFactory.setupAdapterFactory(structuredModel);
 		JsTranslationAdapter translationAdapter = (JsTranslationAdapter) ((IDOMModel) structuredModel).getDocument().getAdapterFor(IJsTranslation.class);
-		IJsTranslation translation = translationAdapter.getJsTranslation(false);
+		IJsTranslation translation = translationAdapter.getJSPTranslation(false);
 		assertTrue("expected function definition is missing", translation.getJsText().indexOf("function blah()") >= 0);
 
 		// release model

@@ -82,7 +82,7 @@ public class ShowTranslationHandler extends AbstractHandler {
 						Job opener = new UIJob("Opening JavaScript Translation") {
 							public IStatus runInUIThread(IProgressMonitor monitor) {
 								JsTranslationAdapter translationAdapter = (JsTranslationAdapter) model.getDocument().getAdapterFor(IJsTranslation.class);
-								final IJsTranslation translation = translationAdapter.getJsTranslation(false);
+								final IJsTranslation translation = translationAdapter.getJSPTranslation(false);
 
 								// create an IEditorInput for the Java editor
 								final IStorageEditorInput input = new JSTranslationEditorInput(model);

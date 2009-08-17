@@ -55,7 +55,7 @@ public class JSTranslationEditorInput implements IStorageEditorInput {
 		 * @see org.eclipse.core.resources.IStorage#getContents()
 		 */
 		public InputStream getContents() throws CoreException {
-			return new DocumentInputStream(new Document(getTranslationAdapter().getJsTranslation(false).getJsText()));
+			return new DocumentInputStream(new Document(getTranslationAdapter().getJSPTranslation(false).getJsText()));
 		}
 
 		/*
@@ -64,7 +64,7 @@ public class JSTranslationEditorInput implements IStorageEditorInput {
 		 * @see org.eclipse.core.resources.IStorage#getFullPath()
 		 */
 		public IPath getFullPath() {
-			return new Path(getTranslationAdapter().getJsTranslation(false).getJavaPath());
+			return new Path(getTranslationAdapter().getJSPTranslation(false).getJavaPath());
 		}
 
 		/*
