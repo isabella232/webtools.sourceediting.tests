@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jst.jsp.core.tests.contentmodels;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import junit.framework.Test;
@@ -133,5 +134,35 @@ public class TestTaglibCMTests extends TestCase {
 				model.releaseFromEdit();
 			}
 		}
+	}
+
+	public void testTagFileHasHTMLContentModel() throws IOException, CoreException {
+		String DPROJECT_NAME = getName();
+		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(DPROJECT_NAME);
+		if (!project.exists()) {
+			// Create new project
+			project = BundleResourceUtil.createSimpleProject(DPROJECT_NAME, null, null);
+		}
+		project.refreshLocal(IResource.DEPTH_INFINITE, null);
+
+		IFile tagFile = project.getFile("test1.tag");
+		assertTrue("test file " + tagFile.getFullPath() + " exists", !tagFile.exists());
+		tagFile.create(new ByteArrayInputStream(new byte[0]), IResource.FORCE, null);
+		assertTrue("test file " + tagFile.getFullPath() + " does not exist", tagFile.exists());
+
+		IDOMModel model = null;
+		try {
+			model = (IDOMModel) StructuredModelManager.getModelManager().getModelForEdit(tagFile);
+			model.getStructuredDocument().set("<b/>");
+			ModelQueryAdapter modelQueryAdapter = (ModelQueryAdapter) ((INodeNotifier) model.getDocument().getDocumentElement()).getAdapterFor(ModelQueryAdapter.class);
+			CMElementDeclaration declaration = modelQueryAdapter.getModelQuery().getCMElementDeclaration(model.getDocument().getDocumentElement());
+			assertNotNull("no CMElementDeclaration for 'b'", declaration);
+		}
+		finally {
+			if (model != null) {
+				model.releaseFromEdit();
+			}
+		}
+		project.delete(true, null);
 	}
 }
