@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2009 IBM Corporation and others.
+ * Copyright (c) 2007, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -329,5 +329,10 @@ public class TestPartitionFormatterXML extends TestCase {
 		// Bug 229135
 		// Test that text content that is split into multiple document regions does not stop the formatter
 		formatAndAssertEquals("testfiles/xml/xml-229135.xml", "testfiles/xml/xml-229135-fmt.xml");
+	}
+
+	public void testFormatTextContentBeforeComment() throws UnsupportedEncodingException, IOException, CoreException {
+		// Bug 299615
+		formatAndAssertEquals("testfiles/xml/format-text-content-before-comment.xml", "testfiles/xml/format-text-content-before-comment-fmt.xml");
 	}
 }
