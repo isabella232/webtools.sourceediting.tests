@@ -34,6 +34,7 @@ import org.eclipse.wst.html.core.tests.parser.EntityTest6;
 import org.eclipse.wst.html.core.tests.parser.EntityTest7;
 import org.eclipse.wst.html.core.tests.parser.EntityTest8;
 import org.eclipse.wst.html.core.tests.parser.EntityTest9;
+import org.eclipse.wst.html.core.tests.parser.OmissibleTest;
 import org.eclipse.wst.html.core.tests.parser.PITest;
 import org.eclipse.wst.html.core.tests.parser.ParserTest;
 import org.eclipse.wst.html.core.tests.parser.ParserTest2;
@@ -128,6 +129,7 @@ public class ModelParserTests extends TestSuite {
 		addTest(new TestSuite(CDATASectionTest2.class, "CDATASectionTest2"));
 		addTest(new TestSuite(CDATASectionTest3.class, "CDATASectionTest3"));
 		addTest(new TestSuite(PITest.class, "PITest"));
+		addTest(new TestSuite(OmissibleTest.class, "Ommissible tags test"));
 
 	}
 }
