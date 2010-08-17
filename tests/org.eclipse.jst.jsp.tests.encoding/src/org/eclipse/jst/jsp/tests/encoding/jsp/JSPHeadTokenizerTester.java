@@ -365,7 +365,7 @@ public class JSPHeadTokenizerTester extends TestCase {
 	
 	public void testUTF16leXmlStyle() throws Exception {
 		String filename = fileLocation + "utf16le_xmlStyle.jsp";
-		doTestFile(filename, "UTF-16LE", null, "text/html");
+		doTestFile(filename, "UTF-16LE", null, null);
 	}
 
 	public String getLanguage() {
