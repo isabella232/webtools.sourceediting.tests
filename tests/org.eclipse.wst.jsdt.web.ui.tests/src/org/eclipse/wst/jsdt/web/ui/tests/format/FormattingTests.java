@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.wst.jsdt.web.ui.tests.format;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -23,13 +22,21 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.formatter.FormattingContext;
 import org.eclipse.jface.text.formatter.FormattingContextProperties;
 import org.eclipse.jface.text.formatter.IContentFormatterExtension;
 import org.eclipse.jface.text.formatter.IFormattingContext;
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.wst.jsdt.core.JavaScriptCore;
+import org.eclipse.wst.jsdt.web.core.javascript.JsTranslationAdapterFactory;
 import org.eclipse.wst.jsdt.web.ui.StructuredTextViewerConfigurationJSDT;
 import org.eclipse.wst.jsdt.web.ui.tests.internal.ProjectUtil;
 import org.eclipse.wst.jsdt.web.ui.tests.internal.StringUtils;
@@ -37,13 +44,12 @@ import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
+import org.eclipse.wst.sse.ui.internal.StructuredTextViewer;
 
 /**
  *
  */
 public class FormattingTests extends TestCase {
-	private static final String UTF_8 = "UTF-8";
-	
 	/**
 	 * The name of the project that all of these tests will use
 	 */
@@ -101,6 +107,58 @@ public class FormattingTests extends TestCase {
 //	public void testFormatJSPScriptEvent() throws UnsupportedEncodingException, IOException, CoreException {
 //		formatAndAssertEquals("test1.jsp", "test1.jsp", new JSDTStructuredTextViewerConfigurationJSP());
 //	}
+
+	public void testFormatHTMLScriptRegionWrappedWithHTMLComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test2.html", "test2-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegionWrappedWithHTMLCommentWithInvalidJS() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test3.html", "test3.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegionWithJustEndHTMLComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test4.html", "test4-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegionWithJustStartHTMLComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test5.html", "test5-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScript_WithHTMLTagInString() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test6.html", "test6-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+
+	public void testFormatHTMLScript_FormattingHTMLBeforeScript() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test7.html", "test7-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScript_WithHTMLTagInString_WithHTMLCommentStartAndEnd_simple() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test8.html", "test8-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScript_WithHTMLTagInString_WithHTMLCommentStartAndEnd_advanded() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test9.html", "test9-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegionWrappedWithHTMLComment_TextInLeadingComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test10.html", "test10-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegionWrappedWithHTMLComment_TextInTrailingComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test11.html", "test11-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegionWrappedWithHTMLComment_TextInLeadingComment_and_TextInTrailingComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test12.html", "test12-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegion_AllOnOneLine() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test13.html", "test13-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
+	
+	public void testFormatHTMLScriptRegion_AllOnOneLine_LeadingComment() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertEquals("test14.html", "test14-fmt.html", new StructuredTextViewerConfigurationJSDT());
+	}
 	
 	/**
 	 * @param beforePath
@@ -117,32 +175,32 @@ public class FormattingTests extends TestCase {
 		try {
 			beforeModel = getModelForEdit(beforePath);
 			assertNotNull("could not retrieve structured model for : " + beforePath, beforeModel);
+			beforeModel.getFactoryRegistry().addFactory(new JsTranslationAdapterFactory());
 
 			afterModel = getModelForEdit(afterPath);
 			assertNotNull("could not retrieve structured model for : " + afterPath, afterModel);
 
+			//normalize contents
 			IStructuredDocument document = beforeModel.getStructuredDocument();
-			
 			String normalizedContents = document.get();
 			normalizedContents = StringUtils.replace(normalizedContents, "\r\n", "\n");
 			normalizedContents = StringUtils.replace(normalizedContents, "\r", "\n");
 			document.set(normalizedContents);
-
-			IContentFormatterExtension formatter = (IContentFormatterExtension) configuration.getContentFormatter(null);
+			
+			ISourceViewer viewer = getConfiguredViewer(document, configuration);
+			assertNotNull("Could not get viewer to run test", viewer);
+			
+			//do the format
+			IContentFormatterExtension formatter = (IContentFormatterExtension) configuration.getContentFormatter(viewer);
 			IFormattingContext fContext = new FormattingContext();
 			Region region = new Region(0, document.getLength());
 			fContext.setProperty(FormattingContextProperties.CONTEXT_DOCUMENT, Boolean.valueOf(true));
 			fContext.setProperty(FormattingContextProperties.CONTEXT_REGION, region);
 			formatter.format(document, fContext);
 			
-			ByteArrayOutputStream formattedBytes = new ByteArrayOutputStream();
-			beforeModel.save(formattedBytes); // "beforeModel" should now be after the formatter
-
-			ByteArrayOutputStream afterBytes = new ByteArrayOutputStream();
-			afterModel.save(afterBytes);
-
-			String expectedContents = new String(afterBytes.toByteArray(), UTF_8);
-			String actualContents = new String(formattedBytes.toByteArray(), UTF_8);
+			//get the contents
+			String actualContents = beforeModel.getStructuredDocument().get();
+			String expectedContents = afterModel.getStructuredDocument().get();
 
 			/* Make some adjustments to ignore cross platform line delimiter issues */
 			expectedContents = StringUtils.replace(expectedContents, "\r\n", "\n");
@@ -156,10 +214,18 @@ public class FormattingTests extends TestCase {
 		}
 		finally {
 			if (beforeModel != null) {
-				beforeModel.releaseFromEdit();
+				try {
+					beforeModel.releaseFromEdit();
+				} catch(Exception e) {
+					//ignore
+				}
 			}
 			if (afterModel != null) {
-				afterModel.releaseFromEdit();
+				try {
+					afterModel.releaseFromEdit();
+				} catch(Exception e) {
+					//ignore
+				}
 			}
 		}
 	}
@@ -198,6 +264,31 @@ public class FormattingTests extends TestCase {
 			io.printStackTrace();
 		}
 		return model;
+	}
+	
+	/**
+	 * @param document {@link IDocument} to display in the dummy viewer
+	 * @param configuration {@link SourceViewerConfiguration} to configure the dummy viewer with
+	 * @return a configured {@link ISourceViewer} using the given parameters
+	 */
+	private static ISourceViewer getConfiguredViewer(IDocument document, SourceViewerConfiguration configuration) {
+		ISourceViewer viewer = null;
+		assertNotNull("Could not get current display to run test with.", Display.getCurrent());
+
+		Shell shell = null;
+
+		if (PlatformUI.isWorkbenchRunning()) {
+			shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		}
+		else {
+			shell = new Shell(Display.getCurrent());
+		}
+		Composite parent = new Composite(shell, SWT.NONE);
+		viewer = new StructuredTextViewer(parent, null, null, false, SWT.NONE);
+		viewer.setDocument(document);
+		viewer.configure(configuration);
+		
+		return viewer;
 	}
 	
 	/**
