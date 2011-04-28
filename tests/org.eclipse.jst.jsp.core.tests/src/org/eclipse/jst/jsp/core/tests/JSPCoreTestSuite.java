@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others.
+ * Copyright (c) 2004, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,7 @@ import org.eclipse.jst.jsp.core.tests.model.TestModelIncludes;
 import org.eclipse.jst.jsp.core.tests.model.TestModelRelease;
 import org.eclipse.jst.jsp.core.tests.model.TestModelWithNoFile;
 import org.eclipse.jst.jsp.core.tests.source.JSPTokenizerTest;
+import org.eclipse.jst.jsp.core.tests.tei.TEIValidation;
 import org.eclipse.jst.jsp.core.tests.translation.JSPJavaTranslatorCoreTest;
 import org.eclipse.jst.jsp.core.tests.translation.JSPTranslatorPersistenceTest;
 import org.eclipse.jst.jsp.core.tests.validation.JSPActionValidatorTest;
@@ -62,6 +63,7 @@ public class JSPCoreTestSuite extends TestSuite {
 		addTest(new TestSuite(TestModelIncludes.class, "Core Fragment Inclusion Tests"));
 		addTest(new TestSuite(JSPCorePreferencesTest.class, "Preference Tests"));
 		addTest(new TestSuite(JSPedCSSSourceParserTest.class, "Special Parsing Tests for JSP-CSS content"));
+		addTest(new TestSuite(TEIValidation.class, "TagExtraInfo Validation Tests"));
 		addTest(new TestSuite(JSPJavaValidatorTest.class, "Java Validator Tests"));
 		addTest(new TestSuite(TestImportedNodes.class, "Imported Nodes Tests"));
 		addTest(new TestSuite(TestFixedCMDocuments.class, "Fixed CMDocument Creation Tests"));

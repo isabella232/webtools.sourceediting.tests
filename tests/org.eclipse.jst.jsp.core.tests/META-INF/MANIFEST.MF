@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name.0
 Bundle-SymbolicName: org.eclipse.jst.jsp.core.tests
-Bundle-Version: 1.0.403.qualifier
+Bundle-Version: 1.0.404.qualifier
 Bundle-ClassPath: jspcoretests.jar
 Bundle-Activator: org.eclipse.jst.jsp.core.tests.JSPCoreTestsPlugin
 Bundle-Vendor: %Bundle-Vendor.0
@@ -16,6 +16,7 @@ Export-Package: org.eclipse.jst.jsp.core.tests,
  org.eclipse.jst.jsp.core.tests.model,
  org.eclipse.jst.jsp.core.tests.source,
  org.eclipse.jst.jsp.core.tests.taglibindex,
+ org.eclipse.jst.jsp.core.tests.tei,
  org.eclipse.jst.jsp.core.tests.translation,
  org.eclipse.jst.jsp.core.tests.util,
  org.eclipse.jst.jsp.core.tests.validation,
