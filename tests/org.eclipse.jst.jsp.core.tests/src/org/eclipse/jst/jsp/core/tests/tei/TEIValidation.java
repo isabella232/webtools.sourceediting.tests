@@ -18,8 +18,14 @@ import junit.framework.TestCase;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jst.jsp.core.internal.taglib.TaglibHelper;
 import org.eclipse.jst.jsp.core.tests.taglibindex.BundleResourceUtil;
@@ -30,6 +36,7 @@ import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocumentReg
 import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegionContainer;
 import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegionList;
+import org.eclipse.wst.validation.internal.operations.ValidatorManager;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMNode;
 import org.w3c.dom.NodeList;
@@ -65,6 +72,7 @@ public class TEIValidation extends TestCase {
 			IStructuredDocumentRegion region = node.getStartStructuredDocumentRegion();
 			ITextRegionList regions = region.getRegions();
 			assertTrue(regions.size() > 2);
+			waitForBuildAndValidation(getProject());
 			final TaglibHelper helper = new TaglibHelper(getProject());
 			final List problems = new ArrayList();
 			final IStructuredDocument document = model.getStructuredDocument();
@@ -75,6 +83,39 @@ public class TEIValidation extends TestCase {
 		}
 		finally {
 			if (model != null) model.releaseFromRead();
+		}
+	}
+
+	private void waitForBuildAndValidation(IProject project) throws CoreException {
+		project.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor());
+		waitForBuildAndValidation();
+		project.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor());
+		waitForBuildAndValidation();
+	}
+
+	private void waitForBuildAndValidation() throws CoreException {
+		IWorkspaceRoot root = null;
+		try {
+			ResourcesPlugin.getWorkspace().checkpoint(true);
+			Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, new NullProgressMonitor());
+			Job.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, new NullProgressMonitor());
+			Job.getJobManager().join(ValidatorManager.VALIDATOR_JOB_FAMILY, new NullProgressMonitor());
+			Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, new NullProgressMonitor());
+			Thread.sleep(200);
+			Job.getJobManager().beginRule(root = ResourcesPlugin.getWorkspace().getRoot(), null);
+		}
+		catch (InterruptedException e) {
+		}
+		catch (IllegalArgumentException e) {
+			fail("Illegal argument exception: " + e.getMessage());
+		}
+		catch (OperationCanceledException e) {
+			fail("Operation canceled exception: " + e.getMessage());
+		}
+		finally {
+			if (root != null) {
+				Job.getJobManager().endRule(root);
+			}
 		}
 	}
 }
