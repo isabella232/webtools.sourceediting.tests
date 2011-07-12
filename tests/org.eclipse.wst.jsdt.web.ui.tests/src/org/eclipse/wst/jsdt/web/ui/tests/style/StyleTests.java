@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2010 IBM Corporation and others.
+ * Copyright (c) 2009, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -78,7 +78,7 @@ public class StyleTests extends TestCase {
 		// create test file
 		IFile file = iProject.getFile(fileName);
 		file.create(new ByteArrayInputStream(contents.getBytes()), true, null);
-		IEditorPart editor = IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), file);
+		IEditorPart editor = IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), file, "org.eclipse.wst.html.core.htmlsource.source");
 		assertNotNull("editor failed to open", editor);
 		Control control = (Control) editor.getAdapter(Control.class);
 		assertNotNull("editor did not return a Control adapter", control);
