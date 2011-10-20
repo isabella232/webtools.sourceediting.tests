@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,10 +23,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jface.text.DocumentRewriteSession;
-import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IDocumentExtension4;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.formatter.FormattingContext;
 import org.eclipse.jface.text.formatter.FormattingContextProperties;
@@ -35,12 +32,16 @@ import org.eclipse.jface.text.formatter.IFormattingContext;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.eclipse.jst.jsp.ui.StructuredTextViewerConfigurationJSP;
 import org.eclipse.jst.jsp.ui.tests.util.ProjectUtil;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.wst.html.core.internal.HTMLCorePlugin;
 import org.eclipse.wst.html.core.internal.preferences.HTMLCorePreferenceNames;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.utils.StringUtils;
+import org.eclipse.wst.sse.ui.StructuredTextEditor;
+import org.eclipse.wst.sse.ui.internal.StructuredTextViewer;
 
 public class TestContentFormatter extends TestCase {
 	String wtp_autotest_noninteractive = null;
@@ -96,15 +97,15 @@ public class TestContentFormatter extends TestCase {
 			afterModel.save(afterBytes);
 
 			String expectedContents = new String(afterBytes.toByteArray(), UTF_8);
-			expectedContents = StringUtils.replace(expectedContents, "\r\n", "\n");
+			expectedContents = StringUtils.replace(expectedContents, "\r\n", "\r");
 			expectedContents = StringUtils.replace(expectedContents, "\r", "\n");
 
 			String actualContents = new String(formattedBytes.toByteArray(), UTF_8);
-			actualContents = StringUtils.replace(actualContents, "\r\n", "\n");
+			actualContents = StringUtils.replace(actualContents, "\r\n", "\r");
 			actualContents = StringUtils.replace(actualContents, "\r", "\n");
 
-			assertEquals("Formatted document differs from the expected.", expectedContents, actualContents);
 			assertTrue(onlyWhiteSpaceDiffers(expectedContents, actualContents));
+			assertEquals("Formatted document differs from the expected.", expectedContents, actualContents);
 		}
 		finally {
 			if (beforeModel != null)
@@ -115,41 +116,16 @@ public class TestContentFormatter extends TestCase {
 	}
 
 	private void formatAndAssertSignificantEquals(String beforePath, boolean resetPreferences) throws UnsupportedEncodingException, IOException, CoreException {
-		IStructuredModel beforeModel = null;
+		StructuredTextEditor editor = (StructuredTextEditor) IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(beforePath)), "org.eclipse.jst.jsp.core.jspsource.source", true);
 		try {
-			beforeModel = getModelForEdit(beforePath);
-			assertNotNull("could not retrieve structured model for : " + beforePath, beforeModel);
-			
-			if (resetPreferences) {
-				resetPreferencesToDefault();
-			}
+			String before = editor.getDocumentProvider().getDocument(editor.getEditorInput()).get();
+			editor.getTextViewer().doOperation(StructuredTextViewer.FORMAT_DOCUMENT);
 
-			SourceViewerConfiguration configuration = new StructuredTextViewerConfigurationJSP();
-			IContentFormatterExtension formatter = (IContentFormatterExtension) configuration.getContentFormatter(null);
-
-			IDocument document = beforeModel.getStructuredDocument();
-			String before = document.get();
-			Region region = new Region(0, document.getLength());
-			fContext.setProperty(FormattingContextProperties.CONTEXT_DOCUMENT, Boolean.TRUE);
-			fContext.setProperty(FormattingContextProperties.CONTEXT_REGION, region);
-			DocumentRewriteSession rewriteSession = null;
-			if (document instanceof IDocumentExtension4) {
-				IDocumentExtension4 extension = (IDocumentExtension4) document;
-				DocumentRewriteSessionType type = DocumentRewriteSessionType.UNRESTRICTED;
-				rewriteSession = (extension.getActiveRewriteSession() != null) ? null : extension.startRewriteSession(type);
-			}
-			formatter.format(document, fContext);
-			String after = document.get();
-			if (document instanceof IDocumentExtension4 && rewriteSession != null) {
-				IDocumentExtension4 extension = (IDocumentExtension4) document;
-				extension.stopRewriteSession(rewriteSession);
-			}
-
+			String after = editor.getDocumentProvider().getDocument(editor.getEditorInput()).get();
 			assertTrue(onlyWhiteSpaceDiffers(before, after));
 		}
 		finally {
-			if (beforeModel != null)
-				beforeModel.releaseFromEdit();
+			editor.close(false);
 		}
 	}
 
@@ -202,11 +178,8 @@ public class TestContentFormatter extends TestCase {
 		writer2.close();
 
 		char[] expectedCompacted = writer1.toCharArray();
-		char[] actualCompacted = writer1.toCharArray();
-		assertEquals("significant character lengths are not the same", expectedCompacted.length, actualCompacted.length);
-		for (int i = 0; i < actualCompacted.length; i++) {
-			assertEquals("significant character differs", expectedCompacted[i], actualCompacted[i]);
-		}
+		char[] actualCompacted = writer2.toCharArray();
+		assertEquals("significant character differs", new String(expectedCompacted), new String(actualCompacted));
 
 		return true;
 	}
@@ -250,7 +223,10 @@ public class TestContentFormatter extends TestCase {
 		formatAndAssertEquals(beforePath, afterPath, true);
 	}
 
-	public void testFormatBug358545() throws UnsupportedEncodingException, IOException, CoreException {
+	public void testFormatBug358545a() throws UnsupportedEncodingException, IOException, CoreException {
 		formatAndAssertSignificantEquals("/" + PROJECT_NAME + "/WebContent/formatbug358545.jsp", true);
+	}
+	public void testFormatBug358545b() throws UnsupportedEncodingException, IOException, CoreException {
+		formatAndAssertSignificantEquals("/" + PROJECT_NAME + "/WebContent/formatbug358545b.jsp", true);
 	}
 }

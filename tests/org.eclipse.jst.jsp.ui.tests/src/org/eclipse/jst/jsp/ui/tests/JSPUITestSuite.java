@@ -22,6 +22,7 @@ import org.eclipse.jst.jsp.ui.tests.contentassist.JSPTranslationTest;
 import org.eclipse.jst.jsp.ui.tests.contentassist.TestJSPContentAssistComputers;
 import org.eclipse.jst.jsp.ui.tests.contentdescription.TestContentDescription;
 import org.eclipse.jst.jsp.ui.tests.document.FileBufferDocumentTester;
+import org.eclipse.jst.jsp.ui.tests.format.TestContentFormatter;
 import org.eclipse.jst.jsp.ui.tests.model.TestModelsFromFiles;
 import org.eclipse.jst.jsp.ui.tests.modelquery.ModelQueryTester;
 import org.eclipse.jst.jsp.ui.tests.other.ScannerUnitTests;
@@ -47,6 +48,7 @@ public class JSPUITestSuite extends TestSuite {
 		addTest(new TestSuite(ScannerUnitTests.class, "ScannerUnitTests"));
 		addTest(new TestSuite(UnitTests.class, "UnitTests"));
 		addTest(new TestSuite(TestStructuredPartitionerJSP.class, "TestStructuredPartioner"));
+		addTest(new TestSuite(TestContentFormatter.class, "Content Formatter Tests"));
 		addTest(new TestSuite(ModelQueryTester.class, "ModelQueryTester"));
 		addTest(new TestSuite(JSPJavaTranslatorTest.class, "Mixed JavaScript Translator Tests"));
 		addTest(new TestSuite(TestEmailNotice.class, "TestEmailNotice"));
