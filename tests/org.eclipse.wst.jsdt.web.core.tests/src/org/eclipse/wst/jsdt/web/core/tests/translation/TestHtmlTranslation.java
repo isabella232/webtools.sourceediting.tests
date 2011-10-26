@@ -550,4 +550,25 @@ public class TestHtmlTranslation extends TestCase {
 		// release model
 		structuredModel.releaseFromRead();
 	}
+
+	public void testEmptyEventHandlerValueCausesStringIndexOutOfBounds() throws Exception {
+		String fileName = getName() + ".html";
+		IStructuredModel structuredModel = getSharedModel(fileName, "<html><body><span onclick=\"\"></body></html>");
+		assertNotNull("missing test model", structuredModel);
+		JsTranslationAdapterFactory.setupAdapterFactory(structuredModel);
+		try {
+			// do translation
+			JsTranslationAdapter translationAdapter = (JsTranslationAdapter) ((IDOMModel) structuredModel).getDocument().getAdapterFor(IJsTranslation.class);
+			IJsTranslation translation = translationAdapter.getJsTranslation(false);
+			String translated = translation.getJsText();
+		}
+		catch (StringIndexOutOfBoundsException e) {
+			fail(e.getMessage());
+		}
+		finally {
+			if (structuredModel != null) {
+				structuredModel.releaseFromRead();
+			}
+		}
+	}
 }
