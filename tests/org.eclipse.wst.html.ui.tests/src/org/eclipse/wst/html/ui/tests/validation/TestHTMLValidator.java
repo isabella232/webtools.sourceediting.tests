@@ -141,7 +141,41 @@ public class TestHTMLValidator extends TestCase {
 			}
 		}
 	}
-	
+
+	/**
+	 * Regression test for Bug 371021
+	 * 
+	 */
+	public void testBadReference() throws Exception{
+		IFile testFile = null;
+		IStructuredModel model = null;
+		
+		try {
+			//get test file
+			testFile = fProject.getFile("badReference.html");
+			assertTrue("Test file " + testFile + " does not exist", testFile.exists());
+			
+			//get the document
+			model = StructuredModelManager.getModelManager().getModelForEdit(testFile);
+			
+			//set up for validator
+			WorkbenchContext context = new WorkbenchContext();
+			List fileList = new ArrayList();
+			fileList.add(testFile.getFullPath().toPortableString());
+			context.setValidationFileURIs(fileList);
+			
+			//validate clean file
+			TestReporter reporter = new TestReporter();
+			fValidator.validate(context, reporter);
+			assertFalse("There should be no validation errors on " + testFile, reporter.isMessageReported());
+
+		} finally {
+			if(model != null) {
+				model.releaseFromEdit();
+			}
+		}
+	}
+
 	/**
 	 * Regression test for Bug 298472
 	 * 
