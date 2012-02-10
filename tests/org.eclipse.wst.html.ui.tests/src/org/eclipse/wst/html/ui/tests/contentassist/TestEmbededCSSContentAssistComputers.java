@@ -66,7 +66,7 @@ public class TestEmbededCSSContentAssistComputers extends TestCase {
 	 * @see #suite()
 	 */
 	public TestEmbededCSSContentAssistComputers() {
-		super("Test Embeded CSS Content Assist Computers");
+		super("Test Embedded CSS Content Assist Computers");
 	}
 	
 	/**

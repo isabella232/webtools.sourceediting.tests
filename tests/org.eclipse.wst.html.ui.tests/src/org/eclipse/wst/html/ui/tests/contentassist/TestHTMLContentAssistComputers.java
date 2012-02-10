@@ -295,7 +295,7 @@ public class TestHTMLContentAssistComputers extends TestCase {
 				} else if(editorPart instanceof StructuredTextEditor) {
 					editor = ((StructuredTextEditor)editorPart);
 				} else {
-					fail("Unable to open structured text editor");
+					fail("Unable to open structured text editor: " + editorPart.getClass().getName());
 				}
 				
 				if(editor != null) {
