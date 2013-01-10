@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2012 IBM Corporation and others.
+ * Copyright (c) 2009, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,6 +25,7 @@ import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.BadLocationException;
@@ -453,8 +454,11 @@ public class XMLCodeFoldingTest extends TestCase implements ISourceReconcilingLi
 			if (previousWTPAutoTestNonInteractivePropValue != null) {
 				System.setProperty(WTP_AUTOTEST_NONINTERACTIVE, previousWTPAutoTestNonInteractivePropValue);
 			}
-			
-			fProject.delete(true, new NullProgressMonitor());
+			try {
+				fProject.delete(true, new NullProgressMonitor());
+			} catch (CoreException e) {
+				// shouldn't cause an error report
+			}
 		}
 		
 		/**

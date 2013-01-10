@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2012 IBM Corporation and others.
+ * Copyright (c) 2006, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -725,7 +725,7 @@ public class JSPJavaTranslatorCoreTest extends TestCase {
 			translator.reset(structuredModel.getDocument(), new NullProgressMonitor());
 			translator.translate();
 
-			assertTrue("specified type did not survive translation", translator.getTranslation().indexOf(typeName) >= 0);
+			assertTrue("specified type did not survive translation:\n"+translator.getTranslation().toString(), translator.getTranslation().indexOf(typeName) >= 0);
 			IJSPProblem[] translationProblems = (IJSPProblem[]) translator.getTranslationProblems().toArray(new IJSPProblem[0]);
 			for (int i = 0; i < translationProblems.length; i++) {
 				assertTrue(translationProblems[i].getID() != IProblem.UndefinedType);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 IBM Corporation and others.
+ * Copyright (c) 2010, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -397,8 +397,11 @@ public class FormattingTests extends TestCase {
 		 */
 		public void tearDown() throws Exception {
 			//delete test projects
-			fProject.delete(true, new NullProgressMonitor());
-			
+			try {
+				fProject.delete(true, new NullProgressMonitor());
+			} catch (CoreException e) {
+				// problem should not cause test error
+			}
 			//reset non-interactive
 			if (previousWTPAutoTestNonInteractivePropValue != null) {
 				System.setProperty(WTP_AUTOTEST_NONINTERACTIVE, previousWTPAutoTestNonInteractivePropValue);
